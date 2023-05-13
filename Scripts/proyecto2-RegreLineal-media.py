@@ -114,7 +114,7 @@ y_pred_new3 = regr3.predict([[mensaje3]])
 #Antes de predecir el precio vamos a aplicar una devaluación por año
 total_price = (y_pred_new+y_pred_new2+y_pred_new3)/3
 print("the price predicted is:",int(total_price))
-precio_inicial = int(total_price) # Precio inicial del coche (en dólares, por ejemplo)
+precio_inicial = int(total_price) # Precio inicial del coche 
 año_coche = int(mensaje2) # Año del coche que queremos valorar
 
 # Tasa de depreciación para cada año desde 2023
