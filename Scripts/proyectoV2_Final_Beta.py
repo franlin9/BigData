@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu May 11 10:09:10 2023
+Created on Thu May 16 10:09:10 2023
 
-@author: franlin
+@author: Franlin
 """
 import pandas as pd
 import numpy as np
@@ -129,7 +129,7 @@ data['year'] = data['year'].fillna(0)
 data['fuel'] = data['fuel'].astype(np.int64)
 data['price'] = data['price'].astype(np.int64)
 data['year'] = data['year'].astype(np.int64)
-
+data['province'] = data['province'].astype(str)
 # Attribute information
 print(data.info())
 
@@ -244,7 +244,7 @@ def predecir_precio():
 
 #ponemos a una variable los campor que seran de utilidad
 
-data = data[['make','model', 'year', 'fuel', 'price','kms']]
+data = data[['make','model', 'year', 'fuel', 'price','kms','province']]
 
 coches = data.copy()
 
@@ -254,46 +254,6 @@ print(coches.describe(include='all'))
 sample = coches.sample(axis = 0)
 makeRand = sample['make'].values[0]
 
-#El valor predeterminado de 0.8 significa que los autos recomendados serán el 
-# 80% superior de los autos en función de su precio.
-
-def obtener_recomendacion(percentile=0.8):
-    
-    coches = data.copy()
-
-    print("Marca preferida:")  
-    make = str(input())
-    
-    print("Precio mínimo:")  
-    low_price = int(input())
-    
-    print("Precio máximo:") 
-    high_price = int(input())
-    
-    print("Año minimo:") 
-    low_year = int(input())
-    
-    print("Año máximo") 
-    high_year = int(input())
-    #1-Diésel, 2-Gasolina,3-Hibrido
-    #4-Eléctrico, 5-Hibrido enchufable,6-Gas licuado (GLP), 7-Gas natural (CNG)
-    print("Tipo de combustible (1 = Diésel , 2 = Gasolina, 3 = Hibrido, 4 = Eléctrico, 5 = Hibrido enchufable, 6 = Gas licuado (GLP), 7 = Gas natural (CNG))") 
-    fuel = int(input())
-
-    coches = coches[(coches['make'] == make.upper()) &
-        (coches['price'] >= low_price) &
-        (coches['price'] <= high_price) &
-        (coches['year'] >= low_year) &
-        (coches['year'] <= high_year) &
-        (coches['fuel'] == fuel)]
-
-    m = coches['price'].quantile(percentile)
-
-    q_coches = coches.copy().loc[coches['price'] <= m]
-
-    q_coches = q_coches.sort_values('price', ascending=False)
-    
-    return q_coches
 
 def mostrar_coches_por_presupuesto():
 
@@ -329,44 +289,135 @@ def mostrar_coches_por_presupuesto():
     elif n == 1:
         return 0
 
+#El valor predeterminado de 0.8 significa que los autos recomendados serán el 
+# 80% superior de los autos en función de su precio.
+def obtener_coche_por_ciudad(percentile=0.8):
+    
+    coches = data.copy()
+
+    print("Ingrese la ciudad (por ejemplo, Barcelona):")
+    city = str(input())
+    
+    print("Marca preferida:")  
+    make = str(input())
+    
+    print("Precio mínimo:")  
+    low_price = int(input())
+    
+    print("Precio máximo:") 
+    high_price = int(input())
+    
+    coches = coches[(coches['make'] == make.upper()) &
+        (coches['price'] >= low_price) &
+        (coches['price'] <= high_price) & (coches['province'] == city)]
+
+    m = coches['price'].quantile(percentile)
+
+    q_coches = coches.copy().loc[coches['price'] <= m]
+
+    q_coches = q_coches.sort_values('price', ascending=False)
+    
+    return q_coches
+
+#El valor predeterminado de 0.8 significa que los autos recomendados serán el 
+# 80% superior de los autos en función de su precio.
+def obtener_recomendacion(percentile=0.8):
+    coches = data.copy()
+
+    while True:
+        make = str(input("Marca preferida: "))
+        if make.upper() in coches['make'].unique():
+            break
+        else:
+            print("Marca no válida. Intente nuevamente.")
+
+    while True:
+        try:
+            low_price = int(input("Precio mínimo: "))
+            high_price = int(input("Precio máximo: "))
+            if low_price >= 0 and high_price >= low_price:
+                break
+            else:
+                print("Precios no válidos. Intente nuevamente.")
+        except ValueError:
+            print("Precios no válidos. Intente nuevamente.")
+
+    while True:
+        try:
+            low_year = int(input("Año mínimo: "))
+            high_year = int(input("Año máximo: "))
+            if low_year >= 0 and high_year >= low_year:
+                break
+            else:
+                print("Años no válidos. Intente nuevamente.")
+        except ValueError:
+            print("Años no válidos. Intente nuevamente.")
+
+    while True:
+        try:
+            fuel = int(input("Tipo de combustible (1 = Diésel, 2 = Gasolina, 3 = Hibrido, 4 = Eléctrico, 5 = Hibrido enchufable, 6 = Gas licuado (GLP), 7 = Gas natural (CNG)): "))
+            if fuel in [1, 2, 3, 4, 5, 6, 7]:
+                break
+            else:
+                print("Tipo de combustible no válido. Intente nuevamente.")
+        except ValueError:
+            print("Tipo de combustible no válido. Intente nuevamente.")
+
+    coches = coches[(coches['make'] == make.upper()) &
+                    (coches['price'] >= low_price) &
+                    (coches['price'] <= high_price) &
+                    (coches['year'] >= low_year) &
+                    (coches['year'] <= high_year) &
+                    (coches['fuel'] == fuel)]
+
+    m = coches['price'].quantile(percentile)
+
+    q_coches = coches.copy().loc[coches['price'] <= m]
+
+    q_coches = q_coches.sort_values('price', ascending=False)
+
+    return q_coches
 
 # =============================================================================
 #                   INTERACCION POR CONSOLA CON EL USUARIO
 # =============================================================================
 
-while(1):
+while True:
+    print("\n¿Qué desea realizar?\n")
+    print("(1) Predecir precio de mi coche")
+    print("(2) Mostrar recomendaciones de un coche")
+    print("(3) Recomendaciones por mi presupuesto")
+    print("(4) Coches en tu ciudad ")
+    print("(5) Salir")
     
-    print("\n\Que desea realizar? \n\n(1) Predecir precio de mi coche")
-    print("(2) Mostrar recomendaciones de un coche\n(3) Recomendaciones por mi presupuesto")
-    print("(4) Underconstruccion?...\n(5) Salir")
-    option = int(input())
-   
-    # if (option != 1 or option != 2 or option != 5):
-    #     print("\nOpción no valida")
-    #     print("\nVuelve a intentarlo")
+    option = input()
     
-    if option == 1:
+    if option == '1':
         print(predecir_precio())
-        #print("\nEl precio de su coche es de:",predecir_precio(),"euros.")
-    
-    if option == 2:
+    elif option == '2':
         coche = obtener_recomendacion(percentile=0.8)
-        if coche.empty == True:
-            print("\nLo siento! No hay ningún coche parecido a lo que quieres :C")
+        if coche.empty:
+            print("\nLo siento, no hay ningún coche parecido a lo que quieres :C")
         else:
             print(coche)
-    
-    if option == 3:
+    elif option == '3':
         coche = mostrar_coches_por_presupuesto()
         if type(coche) is int:
-            print('\nNo hay coches con precio de 0€!')
-        elif coche.empty == True:
-            print('\nLo siento! No encontramos ningun coche con esos precios!')
-        
+            print('\n¡No hay coches con precio de 0€!')
+        elif coche.empty:
+            print('\nLo siento, no encontramos ningún coche con esos precios.')
         else:
             print(f'{coche}')
+    elif option == '4':
+        coche = obtener_coche_por_ciudad(percentile=0.8)
+        if coche.empty:
+            print("\nLo siento, no hay ningún coche parecido a lo que quieres :C")
+        else:
+            print(coche)
             
-    if option == 5:
+    elif option == '5':
         print("\nCerrando la APP...")
         break
+    else:
+        print("\nOpción no válida. Vuelve a intentarlo.")
 
